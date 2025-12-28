@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="ar">
+<head>
+<meta charset="UTF-8">
+<title>Stake Secure</title>
+<link rel="stylesheet" href="style.css">
+
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+
+</head>
+<body>
+
+<!-- Login -->
+<div id="loginBox" class="box">
+  <h2>🔐 تسجيل الدخول</h2>
+  <input id="loginUser" placeholder="اسم المستخدم">
+  <input id="loginPass" type="password" placeholder="كلمة المرور">
+  <button onclick="login()">دخول</button>
+  <p id="loginMsg"></p>
+
+  <button onclick="showRegister()">إنشاء حساب جديد</button>
+  <button onclick="showReset()">نسيت كلمة المرور</button>
+</div>
+
+<!-- Register -->
+<div id="registerBox" class="box" style="display:none">
+  <h2>🧾 إنشاء حساب</h2>
+  <input id="regUser" placeholder="اسم المستخدم">
+  <input id="regPass" type="password" placeholder="كلمة المرور">
+  <input id="regPin" placeholder="PIN (5 أرقام)" maxlength="5">
+  <button onclick="register()">إنشاء</button>
+  <p id="regMsg"></p>
+
+  <button onclick="showLogin()">رجوع</button>
+</div>
+
+<!-- Reset Password -->
+<div id="resetBox" class="box" style="display:none">
+  <h2>♻️ استرجاع كلمة المرور</h2>
+  <input id="resetUser" placeholder="اسم المستخدم">
+  <input id="resetPin" placeholder="PIN" maxlength="5">
+  <input id="newPass" type="password" placeholder="كلمة سر جديدة">
+  <button onclick="resetPassword()">تغيير</button>
+  <p id="resetMsg"></p>
+
+  <button onclick="showLogin()">رجوع</button>
+</div>
+
+<!-- Main -->
+<div id="mainDiv" style="display:none">
+
+  <!-- Profile -->
+  <div id="profileDiv" class="box">
+    <h2>⚙️ إعدادات الحساب</h2>
+    <p>👤 المستخدم: <span id="profileUsername"></span></p>
+
+    <div id="cardRegister">
+      <h3>ربط بطاقة البنك</h3>
+      <input id="stakeCard" placeholder="رقم البطاقة">
+      <input id="stakeCvv" placeholder="CVV">
+      <button onclick="saveCardInfo()">تأكيد</button>
+      <p id="msgCard"></p>
+    </div>
+
+    <div id="cardDone" style="display:none">
+      <h3>✔️ البطاقة مربوطة</h3>
+      <p>تم حفظ البطاقة ولا يمكن تعديلها.</p>
+    </div>
+
+    <button onclick="showGames()">🎮 المتجر</button>
+    <button onclick="logout()">🚪 خروج</button>
+  </div>
+
+  <!-- Games -->
+  <div id="gamesDiv" class="box" style="display:none">
+    <h2><span id="balanceDisplay">0$</span></h2>
+
+    <h3>💳 شحن الرصيد</h3>
+    <div class="btn-row">
+      <button onclick="openConfirmModal(5)">5$</button>
+      <button onclick="openConfirmModal(10)">10$</button>
+      <button onclick="openConfirmModal(25)">25$</button>
+      <button onclick="openConfirmModal(50)">50$</button>
+    </div>
+    <p id="msgRecharge"></p>
+
+    <h3>💸 سحب الرصيد</h3>
+    <div class="btn-row">
+      <button onclick="withdrawFixed(5)">5$</button>
+      <button onclick="withdrawFixed(10)">10$</button>
+      <button onclick="withdrawFixed(25)">25$</button>
+    </div>
+    <p id="msgWithdraw"></p>
+
+    <h3>📜 سجل العمليات</h3>
+    <div id="history" class="history"></div>
+
+    <button onclick="showProfile()">⬅ إعدادات</button>
+  </div>
+
+</div>
+
+<!-- Confirm Modal -->
+<div id="confirmModal" class="modal" style="display:none">
+  <div class="modal-content">
+    <p id="confirmText"></p>
+    <button onclick="confirmRecharge()">نعم</button>
+    <button onclick="cancelRecharge()">إلغاء</button>
+  </div>
+</div>
+
+<script src="stake.js"></script>
+</body>
+</html>
