@@ -8,27 +8,45 @@ firebase.initializeApp({
 const db = firebase.database();
 let currentUser = null;
 let pendingAmount = 0;
+let pendingWithdraw = 0; // 💡 لمبلغ السحب المخصص
 
-// ----------------- صوت العمليات -----------------
-const coinSound = new Audio('coin.mp3'); // ضع ملف الصوت هنا في نفس المجلد
+const coinSound = new Audio('coin.mp3');
+
+// ----------------- Remember Me AUTO LOGIN -----------------
+window.addEventListener("load", ()=>{
+  let saved = localStorage.getItem("stakeRemember");
+  if(saved){
+    currentUser = saved;
+    loginBox.style.display="none";
+    mainDiv.style.display="block";
+    profileUsername.innerText = currentUser;
+    checkCard();
+    loadBalance();
+    monitorHistory();
+  }
+});
 
 function playCoinSound(){
     coinSound.currentTime = 0;
-    coinSound.play().catch(e => console.log("صوت محجوز من المتصفح:", e));
+    coinSound.play().catch(()=>{});
 }
 
 // ----------------- UI Helpers -----------------
 function hideAll(){
-  document.getElementById("loginBox").style.display = "none";
-  document.getElementById("registerBox").style.display = "none";
-  document.getElementById("resetBox").style.display = "none";
+  loginBox.style.display = "none";
+  registerBox.style.display = "none";
+  resetBox.style.display = "none";
 }
-function showLogin(){ hideAll(); document.getElementById("loginBox").style.display="block"; }
-function showRegister(){ hideAll(); document.getElementById("registerBox").style.display="block"; }
-function showReset(){ hideAll(); document.getElementById("resetBox").style.display="block"; }
-function showProfile(){ document.getElementById("profileDiv").style.display="block"; document.getElementById("gamesDiv").style.display="none"; }
-function showGames(){ document.getElementById("profileDiv").style.display="none"; document.getElementById("gamesDiv").style.display="block"; }
-function logout(){ location.reload(); }
+function showLogin(){ hideAll(); loginBox.style.display="block"; }
+function showRegister(){ hideAll(); registerBox.style.display="block"; }
+function showReset(){ hideAll(); resetBox.style.display="block"; }
+function showProfile(){ profileDiv.style.display="block"; gamesDiv.style.display="none"; }
+function showGames(){ profileDiv.style.display="none"; gamesDiv.style.display="block"; }
+
+function logout(){
+  localStorage.removeItem("stakeRemember");
+  location.reload();
+}
 
 // ----------------- Register/Login/Reset -----------------
 function register(){
@@ -54,8 +72,12 @@ function login(){
     if(!d || d.password!==p){ loginMsg.innerText="❌ خطأ"; return; }
 
     currentUser = u;
-    document.getElementById("loginBox").style.display="none";
-    document.getElementById("mainDiv").style.display="block";
+    if(document.getElementById("rememberMe").checked){
+      localStorage.setItem("stakeRemember", currentUser);
+    }
+
+    loginBox.style.display="none";
+    mainDiv.style.display="block";
     profileUsername.innerText = currentUser;
 
     checkCard();
@@ -112,7 +134,6 @@ function loadBalance(){
   });
 }
 
-// ----------------- Animate Balance -----------------
 function animateBalance(target) {
   const display = document.getElementById("balanceDisplay");
   let current = Number(display.innerText.replace("$","")) || 0;
@@ -190,7 +211,7 @@ function rechargeFixed(amount){
           return d;
         }).then((res)=>{
           animateBalance(res.snapshot.val().balance);
-          playCoinSound(); // تشغيل الصوت بعد تفاعل المستخدم
+          playCoinSound();
           msgRecharge.innerText="✅ تم شحن "+amount+"$ بنجاح";
 
           db.ref("users/"+owner+"/history").transaction(h=>{
@@ -200,14 +221,34 @@ function rechargeFixed(amount){
           });
         });
 
-      }).catch(err=>{ console.log(err); msgRecharge.innerText="❌ خطأ"; });
+      }).catch(()=>{ msgRecharge.innerText="❌ خطأ"; });
 
     });
   });
 }
 
-// ----------------- Withdraw -----------------
+// ----------------- Withdraw Fixed -----------------
 function withdrawFixed(amount){
+  processWithdraw(amount);
+}
+
+// ----------------- Withdraw Custom مع تأكيد -----------------
+function withdrawCustom(){
+  let input = prompt("أدخل المبلغ الذي تريد سحبه:");
+  let amount = Number(input);
+  if(isNaN(amount) || amount <= 0){
+    msgWithdraw.innerText = "❌ أدخل مبلغ صالح";
+    return;
+  }
+  pendingWithdraw = amount;
+  if(confirm(`هل تريد سحب ${amount}$ من رصيدك؟`)){
+    processWithdraw(pendingWithdraw);
+    pendingWithdraw = 0;
+  }
+}
+
+// ----------------- Process Withdraw (مشترك) -----------------
+function processWithdraw(amount){
   db.ref("userStake/"+currentUser).once("value").then(s=>{
     let u = s.val()||{};
     if(!u.cardNumber){ msgWithdraw.innerText="❌ اربط البطاقة"; return; }
@@ -228,7 +269,7 @@ function withdrawFixed(amount){
         return d;
       }).then((res)=>{
         animateBalance(res.snapshot.val().balance);
-        playCoinSound(); // تشغيل الصوت بعد تفاعل المستخدم
+        playCoinSound();
         msgWithdraw.innerText="✅ تمت العملية";
 
         db.ref("users/"+owner+"/balance").transaction(b=>(Number(b||0)+amount));
@@ -240,4 +281,4 @@ function withdrawFixed(amount){
       });
     });
   });
-}
+      }
