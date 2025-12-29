@@ -16,6 +16,12 @@
   <h2>🔐 تسجيل الدخول</h2>
   <input id="loginUser" placeholder="اسم المستخدم">
   <input id="loginPass" type="password" placeholder="كلمة المرور">
+
+  <label style="display:block;margin-top:5px;">
+    <input type="checkbox" id="rememberMe">
+    تذكرني في هذا الجهاز
+  </label>
+
   <button onclick="login()">دخول</button>
   <p id="loginMsg"></p>
 
@@ -90,6 +96,8 @@
       <button onclick="withdrawFixed(5)">5$</button>
       <button onclick="withdrawFixed(10)">10$</button>
       <button onclick="withdrawFixed(25)">25$</button>
+      <!-- 💡 زر السحب بمبلغ مخصص -->
+      <button onclick="withdrawCustomPrompt()">💰 سحب مبلغ مخصص</button>
     </div>
     <p id="msgWithdraw"></p>
 
@@ -111,5 +119,19 @@
 </div>
 
 <script src="stake.js"></script>
+<script>
+  // ----------------- السحب بمبلغ مخصص من حقل Input داخل المتجر -----------------
+  function withdrawCustomPrompt(){
+    let input = prompt("أدخل المبلغ الذي تريد سحبه:");
+    let amount = Number(input);
+    if(isNaN(amount) || amount <= 0){
+      msgWithdraw.innerText = "❌ أدخل مبلغ صالح";
+      return;
+    }
+    if(confirm(`هل تريد سحب ${amount}$ من رصيدك؟`)){
+      processWithdraw(amount);
+    }
+  }
+</script>
 </body>
 </html>
